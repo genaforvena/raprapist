@@ -3,38 +3,78 @@ import nltk
 import pronouncing
 from nltk.tokenize import sent_tokenize, word_tokenize
 
-nltk.download('punkt')
+nltk.download("punkt")
 
-def find_rhyming_sentences(text):
+
+def get_meter(phrase):
+    words = word_tokenize(phrase)
+    stresses = [
+        pronouncing.stresses_for_word(word.lower())
+        for word in words
+        if pronouncing.stresses_for_word(word.lower())
+    ]
+    if stresses:
+        combined_stresses = "".join(stresses[0])
+        return combined_stresses
+    return ""
+
+
+def tokenized_phrases_generator(text):
     sentences = sent_tokenize(text)
-    word_to_sentence = {}
-    
     for sentence in sentences:
-        words = word_tokenize(sentence)
+        for phrase in sentence.split(","):
+            yield phrase
+
+
+def find_rhyming_phrases(text):
+    word_to_phrase = {}
+    phrase_meter = {}
+
+    for phrase in tokenized_phrases_generator(text):
+        words = word_tokenize(phrase)
         if words:
             last_word = words[-1].lower()
             rhymes = pronouncing.rhymes(last_word)
             for rhyme in rhymes:
-                if rhyme in word_to_sentence:
-                    word_to_sentence[rhyme].append(sentence)
+                if rhyme in word_to_phrase:
+                    word_to_phrase[rhyme].append(phrase)
                 else:
-                    word_to_sentence[rhyme] = [sentence]
-    
-    return word_to_sentence
+                    word_to_phrase[rhyme] = [phrase]
+        meter = get_meter(phrase)
+        if meter:
+            phrase_meter[phrase] = meter
 
-def create_poem_from_rhymes(word_to_sentence):
-    used_sentences = set()
+    return word_to_phrase, phrase_meter
+
+
+def find_most_common_meter(phrase_meter):
+    meter_count = {}
+    for meter in phrase_meter.values():
+        if meter in meter_count:
+            meter_count[meter] += 1
+        else:
+            meter_count[meter] = 1
+    most_common_meter = max(meter_count, key=meter_count.get)
+    return most_common_meter
+
+
+def create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter):
+    used_phrases = set()
     poem = []
-    
-    for word, sentences in word_to_sentence.items():
-        if len(sentences) > 1:
-            for sentence in sentences:
-                if sentence not in used_sentences:
-                    poem.append(sentence)
-                    used_sentences.add(sentence)
+
+    for word, phrases in word_to_phrase.items():
+        if len(phrases) > 1:
+            for phrase in phrases:
+                if (
+                    phrase not in used_phrases
+                    and phrase_meter.get(phrase) == desired_meter
+                ):
+                    poem.append(phrase.strip())
+                    used_phrases.add(phrase)
                     break
 
     return "\n".join(poem)
+
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
@@ -42,13 +82,13 @@ if __name__ == "__main__":
     args = args.parse_args()
     file_path = args.input
     print("Reading text from", file_path)
-    print("Fisrt words are " + file_path[0:10] + "...)")
+    print("First words are " + file_path[0:10] + "...)")
     with open(file_path, "r") as file:
         text = file.readlines()
         text = " ".join(text)
 
-
-    word_to_sentence = find_rhyming_sentences(text)
-    poem = create_poem_from_rhymes(word_to_sentence)
+    word_to_phrase, phrase_meter = find_rhyming_phrases(text)
+    desired_meter = find_most_common_meter(phrase_meter)
+    poem = create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter)
 
     print(poem)
