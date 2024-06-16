@@ -76,17 +76,25 @@ def create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter):
     return "\n".join(poem)
 
 
-if __name__ == "__main__":
-    args = argparse.ArgumentParser()
-    args.add_argument("input", help="Input file to read the text from")
-    args = args.parse_args()
-    file_path = args.input
-    print("Reading text from", file_path)
-    print("First words are " + file_path[0:10] + "...)")
-    with open(file_path, "r") as file:
-        text = file.readlines()
-        text = " ".join(text)
+def read_multiple_files(file_paths):
+    combined_text = ""
+    for file_path in file_paths:
+        with open(file_path, "r") as file:
+            combined_text += file.read() + " "
+    return combined_text.strip()
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Create a rhyming poem from given text files."
+    )
+    parser.add_argument(
+        "file_paths", metavar="F", type=str, nargs="+", help="paths to text files"
+    )
+    args = parser.parse_args()
+    file_paths = args.file_paths
+
+    text = read_multiple_files(file_paths)
     word_to_phrase, phrase_meter = find_rhyming_phrases(text)
     desired_meter = find_most_common_meter(phrase_meter)
     poem = create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter)
