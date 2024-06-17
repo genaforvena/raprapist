@@ -60,6 +60,7 @@ def find_most_common_meter(phrase_meter):
 
 def create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter):
     used_phrases = set()
+    used_rhymes = set()
     poem = []
 
     for word, phrases in word_to_phrase.items():
@@ -67,10 +68,12 @@ def create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter):
             for phrase in phrases:
                 if (
                     phrase not in used_phrases
+                    and word not in used_rhymes
                     and phrase_meter.get(phrase) == desired_meter
                 ):
                     poem.append(phrase.strip())
                     used_phrases.add(phrase)
+                    used_rhymes.add(word)
                     break
 
     return "\n".join(poem)
