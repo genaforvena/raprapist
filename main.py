@@ -66,14 +66,15 @@ def create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter):
     for word, phrases in word_to_phrase.items():
         if len(phrases) > 1:
             for phrase in phrases:
+                last_word = phrase.split()[-1].lower()
                 if (
                     phrase not in used_phrases
-                    and word not in used_rhymes
+                    and last_word not in used_rhymes
                     and phrase_meter.get(phrase) == desired_meter
                 ):
                     poem.append(phrase.strip())
                     used_phrases.add(phrase)
-                    used_rhymes.add(word)
+                    used_rhymes.add(last_word)
                     break
 
     return "\n".join(poem)
