@@ -1,4 +1,5 @@
 import argparse
+import time
 import nltk
 import pronouncing
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -104,3 +105,5 @@ if __name__ == "__main__":
     poem = create_poem_from_rhymes(word_to_phrase, phrase_meter, desired_meter)
 
     print(poem)
+    with open("results/poem" + str(int(time.time())) + ".txt", "w") as file:
+        file.write(poem)
